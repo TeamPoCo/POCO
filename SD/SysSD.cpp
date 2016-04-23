@@ -26,10 +26,10 @@ SysSD::SysSD(){
 			errors.close();
 			*this.addWarning(Warning.logDoesNotExist("errors.txt"));
 		}
-		//Log "doors.txt"
-		if (!*this.exists("doors.txt")) {
-			*this.createLog_Doors();
-			*this.addWarning(Warning.logDoesNotExist("doors.txt"));
+		//Log "nodes.txt"
+		if (!*this.exists("nodes.txt")) {
+			*this.createLog_Nodes();
+			*this.addWarning(Warning.logDoesNotExist("nodes.txt"));
 		}
 		//Log "users.txt"
 		if (!*this.exists("users.txt")) {
@@ -54,40 +54,93 @@ SysSD::SysSD(){
 	}
 }
 
-bool SysSD::createLog_Doors(){
-	File doors = *this.open("example.txt", FILE_WRITE);
-	doors.close();
+/**
+*	Crée le log "nodes.txt".
+*	
+*	À TESTER/VALIDER
+*/
+bool SysSD::createLog_Nodes(){
+	bool cree = false;
+	File nodes = *this.open("nodes.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
+	nodes.close();
+	return cree;
 }
 
+/**
+*	Crée le log "users.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::createLog_Users(){
+	bool cree = false;
 	File users = *this.open("users.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
 	users.close();
+	return cree;
 }
 
+/**
+*	Crée le log "admins.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::createLog_Admins(){
+	bool cree = false;
 	File admins = *this.open("admins.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
 	admins.close();
+	return cree;
 }
 
+/**
+*	Crée le log "settings.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::createLog_Settings(){
+	bool cree = false;
 	File settings = *this.open("settings.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
 	settings.close();
+	return cree;
 }
 
+/**
+*	Crée le log "actions.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::createLog_Actions(){
+	bool cree = false;
 	File actions = *this.open("actions.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
 	actions.close();
+	return cree;
 }
 
+/**
+*	Crée le log "errors.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::createLog_Errors(){
+	bool cree = false;
 	File errors = *this.open("errors.txt", FILE_WRITE);
+	if(nodes) bool cree = true;
 	errors.close();
+	return cree;
 }
 
+/**
+*	Ajoute une action au log "action.txt".
+*	
+*	COMMENT GERER LA DATE?
+*/
 bool SysSD::addAction(String titre, String message){
 	File actions = *this.open("actions.txt", FILE_WRITE);
 	if(actions){
-		String action = "[" + titre + "] " + message;
+		String action = /*formatDate() + */"[" + titre + "] " + message;
 		*this.println(action);
 	} else {
 		*this.addError(Error.cannotOpen("action.txt"));
@@ -95,6 +148,11 @@ bool SysSD::addAction(String titre, String message){
 	errors.close();
 }
 
+/**
+*	Ajoute un utilisateur au log "users.txt".
+*	
+*	À TESTER/VALIDER
+*/
 bool SysSD::addPeople(String nom, String prenom, String cardID){
 	File users = *this.open("users.txt", FILE_WRITE);
 	if(actions){
@@ -114,22 +172,22 @@ bool SysSD::removePeople(String nom, String prenom, String cardID){
 	
 }
 
-bool SysSD::addNode(String titre, uint_8t nodeID, String type, uint_8t[] settings){
-	File doors = *this.open("doors.txt", FILE_WRITE);
-	if(doors){
-		String door = "" + titre + " " + nodeID + " " + type + " " + settings;
+bool SysSD::addNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
+	File nodes = *this.open("nodes.txt", FILE_WRITE);
+	if(nodes){
+		String door = "" + titre + " " + nodesID + " " + type + " " + settings;
 		*this.println(door);
 	} else {
-		*this.addError(Error.cannotOpen("doors.txt"));
+		*this.addError(Error.cannotOpen("nodes.txt"));
 	}
-	users.doors();
+	users.nodes();
 }
 
-bool SysSD::editNode(String titre, uint_8t nodeID, String type, uint_8t[] settings){
+bool SysSD::editNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
 	
 }
 
-bool SysSD::removeNode(String titre, uint_8t nodeID, String type, uint_8t[] settings){
+bool SysSD::removeNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
 	
 }
 

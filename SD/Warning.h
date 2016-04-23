@@ -7,7 +7,8 @@
 class Warning{
 
 public:
-	static String doesNotExist(String nomFichier);
+	static String logDoesNotExist(String nomFichier);
+	static String FolderDoesNotExist(String nomDossier)
 
 private:
 
