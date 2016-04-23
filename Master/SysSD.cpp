@@ -1,9 +1,8 @@
 // SysSD Class - By Clément BEGNAUD
 
-#include <string>
+#include <WString.h>
 #include <SPI.h>
 #include <SD.h>
-
 #include "SysSD.h"
 
 using namespace std;
@@ -13,7 +12,7 @@ const int SD_chipSelect = 4;
 //Constructeur par défaut
 SysSD::SysSD(){
 	//Détection de la carte SD
-	if (!*this.begin(SD_chipSelect)) {
+	if (!(*this).begin(SD_chipSelect)) {
 		//------  COMMENT INDIQUER L'ERREUR DANS CE CAS?   ------
 		//------   COMMENT VERIFIER L'ESPACE DISPONIBLE SUR LA CARTE?   ------
 		return;
@@ -21,33 +20,33 @@ SysSD::SysSD(){
 		//Détection des logs et création des logs manquants le cas échéant
 		// et Avertir que des logs manquaient
 		//Log "errors.txt"
-		if (!*this.exists("errors.txt")) {
+		if (!(*this).exists("errors.txt")) {
 			File errors = SD.open("errors.txt", FILE_WRITE);
 			errors.close();
 			*this.addWarning(Warning.logDoesNotExist("errors.txt"));
 		}
 		//Log "nodes.txt"
-		if (!*this.exists("nodes.txt")) {
+		if (!(*this).exists("nodes.txt")) {
 			*this.createLog_Nodes();
 			*this.addWarning(Warning.logDoesNotExist("nodes.txt"));
 		}
 		//Log "users.txt"
-		if (!*this.exists("users.txt")) {
+		if (!(*this).exists("users.txt")) {
 			*this.createLog_Users();
 			*this.addWarning(Warning.logDoesNotExist("users.txt"));
 		}
 		//Log "admins.txt"
-		if (!*this.exists("admins.txt")) {
+		if (!(*this).exists("admins.txt")) {
 			*this.createLog_Admins();
 			*this.addWarning(Warning.logDoesNotExist("admins.txt"));
 		}
 		//Log "settings.txt"
-		if (!*this.exists("settings.txt")) {
+		if (!(*this).exists("settings.txt")) {
 			*this.createLog_Settings();
 			*this.addWarning(Warning.logDoesNotExist("settings.txt"));
 		}
 		//Log "actions.txt"
-		if (!*this.exists("actions.txt")) {
+		if (!(*this).exists("actions.txt")) {
 			*this.createLog_Actions();
 			*this.addWarning(Warning.logDoesNotExist("actions.txt"));
 		}
@@ -61,7 +60,7 @@ SysSD::SysSD(){
 */
 bool SysSD::createLog_Nodes(){
 	bool cree = false;
-	File nodes = *this.open("nodes.txt", FILE_WRITE);
+	File nodes = (*this).open("nodes.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	nodes.close();
 	return cree;
@@ -74,7 +73,7 @@ bool SysSD::createLog_Nodes(){
 */
 bool SysSD::createLog_Users(){
 	bool cree = false;
-	File users = *this.open("users.txt", FILE_WRITE);
+	File users = (*this).open("users.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	users.close();
 	return cree;
@@ -87,7 +86,7 @@ bool SysSD::createLog_Users(){
 */
 bool SysSD::createLog_Admins(){
 	bool cree = false;
-	File admins = *this.open("admins.txt", FILE_WRITE);
+	File admins = (*this).open("admins.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	admins.close();
 	return cree;
@@ -100,7 +99,7 @@ bool SysSD::createLog_Admins(){
 */
 bool SysSD::createLog_Settings(){
 	bool cree = false;
-	File settings = *this.open("settings.txt", FILE_WRITE);
+	File settings = (*this).open("settings.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	settings.close();
 	return cree;
@@ -113,7 +112,7 @@ bool SysSD::createLog_Settings(){
 */
 bool SysSD::createLog_Actions(){
 	bool cree = false;
-	File actions = *this.open("actions.txt", FILE_WRITE);
+	File actions = (*this).open("actions.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	actions.close();
 	return cree;
@@ -126,7 +125,7 @@ bool SysSD::createLog_Actions(){
 */
 bool SysSD::createLog_Errors(){
 	bool cree = false;
-	File errors = *this.open("errors.txt", FILE_WRITE);
+	File errors = (*this).open("errors.txt", FILE_WRITE);
 	if(nodes) bool cree = true;
 	errors.close();
 	return cree;
@@ -138,7 +137,7 @@ bool SysSD::createLog_Errors(){
 *	COMMENT GERER LA DATE?
 */
 bool SysSD::addAction(String titre, String message){
-	File actions = *this.open("actions.txt", FILE_WRITE);
+	File actions = (*this).open("actions.txt", FILE_WRITE);
 	if(actions){
 		String action = /*formatDate() + */"[" + titre + "] " + message;
 		*this.println(action);
@@ -154,7 +153,7 @@ bool SysSD::addAction(String titre, String message){
 *	À TESTER/VALIDER
 */
 bool SysSD::addPeople(String nom, String prenom, String cardID){
-	File users = *this.open("users.txt", FILE_WRITE);
+	File users = (*this).open("users.txt", FILE_WRITE);
 	if(actions){
 		String user = "" + nom + " " + prenom + " " + cardID;
 		*this.println(user);
@@ -172,8 +171,8 @@ bool SysSD::removePeople(String nom, String prenom, String cardID){
 	
 }
 
-bool SysSD::addNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
-	File nodes = *this.open("nodes.txt", FILE_WRITE);
+bool SysSD::addNode(String titre, uint8_t nodesID, String type, uint8_t* settings){
+	File nodes = (*this).open("nodes.txt", FILE_WRITE);
 	if(nodes){
 		String door = "" + titre + " " + nodesID + " " + type + " " + settings;
 		*this.println(door);
@@ -183,11 +182,11 @@ bool SysSD::addNode(String titre, uint_8t nodesID, String type, uint_8t[] settin
 	users.nodes();
 }
 
-bool SysSD::editNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
+bool SysSD::editNode(String titre, uint8_t nodesID, String type, uint8_t* settings){
 	
 }
 
-bool SysSD::removeNode(String titre, uint_8t nodesID, String type, uint_8t[] settings){
+bool SysSD::removeNode(String titre, uint8_t nodesID, String type, uint8_t* settings){
 	
 }
 
@@ -201,7 +200,7 @@ String SysSd::readSettings(){
 
 bool SysSD::addError(String str){
 	bool result = true;
-	File errors = *this.open("errors.txt", FILE_WRITE);
+	File errors = (*this).open("errors.txt", FILE_WRITE);
 	if (errors){}
 		File.println(error);
 	} else {
@@ -212,7 +211,7 @@ bool SysSD::addError(String str){
 
 bool SysSD::addWarning(String str){
 	bool result = true;
-	File errors = *this.open("errors.txt", FILE_WRITE);
+	File errors = (*this).open("errors.txt", FILE_WRITE);
 	if (errors){}
 		File.println(warning);
 	} else {

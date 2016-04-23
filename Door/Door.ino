@@ -13,6 +13,7 @@
 #include "RF24Mesh.h"
 #include <SPI.h>
 #include <EEPROM.h>
+#include <Servo.h>
 #include "SoftReset.h"
 //#include <printf.h>
 
@@ -21,6 +22,8 @@
 RF24 radio(7, 8);
 RF24Network network(radio);
 RF24Mesh mesh(radio, network);
+
+Servo servoPorte;
 
 /**
  * User Configuration: nodeID - A unique identifier for each radio. Allows addressing
@@ -34,10 +37,12 @@ RF24Mesh mesh(radio, network);
 
 
 uint32_t displayTimer = 0;
+boolean saveSettings(uint8_t timeOpen, uint8_t valMax, uint8_t valMin);
 
 void setup() {
   Serial.begin(115200);
-  mesh.setNodeID(register());
+  uint8_t writeID = registerNetwork();
+  mesh.setNodeID(writeID);
   // Connect to the mesh
   Serial.print(F("NodeID = "));
   Serial.println(mesh.getNodeID());
@@ -45,6 +50,7 @@ void setup() {
   mesh.begin();
   Serial.print(F("NodeID = "));
   Serial.println(mesh.getNodeID());
+  servoPorte.attach(9);
 }
 
 void loop() {
@@ -72,16 +78,19 @@ void loop() {
   }
 
   while (network.available()) {
+    RF24NetworkHeader header;
+    network.peek(header);
     switch(header.type){
       // Display the incoming millis() values from the sensor nodes
     case 'S':
     {
-      struct settings {
+      struct settings_t {
         uint8_t valMin;
         uint8_t valMax;
         uint8_t timeOpen;
       };
-      boolean answer = false
+      settings_t settings;
+      boolean answer = false;
       network.read(header,&settings,sizeof(settings));
       answer = saveSettings(settings.timeOpen, settings.valMax, settings.valMin);
       mesh.write(&answer, 'S', sizeof(answer), header.from_node);
@@ -90,12 +99,13 @@ void loop() {
     case 'O':
     {
       boolean action = false;
+      network.read(header,&action,sizeof(action));
       if(action)
-        openDoor();
+        //openDoor();
+        servoPorte.write(90);
       else
-        closeDoor();
-      network.read(header,&dat,sizeof(dat));
-      mesh.write(&tabDoor, 'C', sizeof(tabDoor), header.from_node);
+        //closeDoor();
+        servoPorte.write(0);
       break;
     }
     default: 
@@ -106,18 +116,18 @@ void loop() {
   }
 }
 
-void saveSetting(uint8_t timeOpen, uint8_t valMax, uint8_t valMin=0){
+boolean saveSettings(uint8_t timeOpen, uint8_t valMax, uint8_t valMin){
   EEPROM.write(110,valMin);
   EEPROM.write(120,valMax);
   EEPROM.write(130,timeOpen);
   return true;
 }
 
-uint8_t register(){
+uint8_t registerNetwork(){
   if(EEPROM.read(100) > 0 &&  EEPROM.read(100) < 255){
     Serial.print(F("read eeprom 100 : "));
-    Serial.println(int(EEPROM.read(100)));
-    return EEPROM.read(100);
+    Serial.println(uint8_t(EEPROM.read(100)));
+    return uint8_t(EEPROM.read(100));
   }
   else {
     mesh.setNodeID(255);
@@ -132,7 +142,6 @@ uint8_t register(){
       mesh.update();
       while (network.available()) {
         RF24NetworkHeader header;
-        payload_t payload;
         network.read(header, &myID, sizeof(myID));
         Serial.print("New ID : ");
         Serial.println(myID);

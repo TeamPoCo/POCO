@@ -29,6 +29,7 @@ uint32_t ctr=0;
 
 uint8_t nodesID[253] = {0};
 
+boolean ouvrir = true;
 
 void setup() {
   Serial.begin(115200);
@@ -125,17 +126,19 @@ void loop() {
  
   // Send each node a message every five seconds
   // Send a different message to node 1, containing another counter instead of millis()
-  if(millis() - displayTimer > 5000){
-    ctr++;
-    for (int i = 0; i < mesh.addrListTop; i++) {
+  if(millis() - displayTimer > 2000){
+    //ctr++;
+    /*for (int i = 0; i < mesh.addrListTop; i++) {
       payload_t payload = {millis(),ctr};
-      if (mesh.addrList[i].nodeID == 255) {  //Searching for node one from address list
-        payload = {ctr%3,ctr};
-      }
       RF24NetworkHeader header(mesh.addrList[i].address, OCT); //Constructing a header
       Serial.println( (network.write(header, &payload, sizeof(payload)) == 1 ? "Send OK" : "Send Fail")); //Sending an message
       
-    }
+    }*/
+    if (ouvrir) {
+      ouvrir = false;
+    }else{
+      ouvrir = true;}
+    mesh.write(&ouvrir, 'O', sizeof(ouvrir), 1);
     displayTimer = millis();
   }
 }
