@@ -1,9 +1,9 @@
 // Error Class Header - By Clément BEGNAUD
-
-#include <WString.h>
-
 #ifndef ERROR_H
 #define ERROR_H
+
+#include <String.h>
+//#include <iostream>
 
 class Error{
 

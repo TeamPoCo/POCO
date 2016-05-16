@@ -1,12 +1,12 @@
 // SysSD Class - By Clément BEGNAUD
 
-#include <WString.h>
+#include <string.h>
+#include <Stream.h>
+//#include <iostream>
 #include <SPI.h>
 #include <SD.h>
-#include "User.h"
-#include "Error.h"
-#include "Warning.h"
-#include "Door.h"
+
+#include "SysSD.h"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ const int SD_chipSelect = 4;
 //Constructeur par défaut
 SysSD::SysSD(){
 	//Détection de la carte SD
-	if (!(*this).begin(SD_chipSelect)) {
+	if (!SD.begin(SD_chipSelect)) {
 		//------  COMMENT INDIQUER L'ERREUR DANS CE CAS?   ------
 		//------   COMMENT VERIFIER L'ESPACE DISPONIBLE SUR LA CARTE?   ------
 		return;
@@ -23,35 +23,35 @@ SysSD::SysSD(){
 		//Détection des logs et création des logs manquants le cas échéant
 		// et Avertir que des logs manquaient
 		//Log "errors.txt"
-		if (!(*this).exists("errors.txt")) {
+		if (SD.exists("errors.txt")) {
 			File errors = SD.open("errors.txt", FILE_WRITE);
 			errors.close();
-			*this.addWarning(Warning.logDoesNotExist("errors.txt"));
+			this->addWarning(Warning::logDoesNotExist("errors.txt"));
 		}
 		//Log "nodes.txt"
-		if (!(*this).exists("nodes.txt")) {
-			*this.createLog_Nodes();
-			*this.addWarning(Warning.logDoesNotExist("nodes.txt"));
+		if (!SD.exists("nodes.txt")) {
+			this->createLog_Nodes();
+			this->addWarning(Warning::logDoesNotExist("nodes.txt"));
 		}
 		//Log "users.txt"
-		if (!(*this).exists("users.txt")) {
-			*this.createLog_Users();
-			*this.addWarning(Warning.logDoesNotExist("users.txt"));
+		if (!SD.exists("users.txt")) {
+			this->createLog_Users();
+			this->addWarning(Warning::logDoesNotExist("users.txt"));
 		}
 		//Log "admins.txt"
-		if (!(*this).exists("admins.txt")) {
-			*this.createLog_Admins();
-			*this.addWarning(Warning.logDoesNotExist("admins.txt"));
+		if (!SD.exists("admins.txt")) {
+			this->createLog_Admins();
+			this->addWarning(Warning::logDoesNotExist("admins.txt"));
 		}
 		//Log "settings.txt"
-		if (!(*this).exists("settings.txt")) {
-			*this.createLog_Settings();
-			*this.addWarning(Warning.logDoesNotExist("settings.txt"));
+		if (!SD.exists("settings.txt")) {
+			this->createLog_Settings();
+			this->addWarning(Warning::logDoesNotExist("settings.txt"));
 		}
 		//Log "actions.txt"
-		if (!(*this).exists("actions.txt")) {
-			*this.createLog_Actions();
-			*this.addWarning(Warning.logDoesNotExist("actions.txt"));
+		if (!SD.exists("actions.txt")) {
+			this->createLog_Actions();
+			this->addWarning(Warning::logDoesNotExist("actions.txt"));
 		}
 	}
 }
@@ -63,9 +63,11 @@ SysSD::SysSD(){
 */
 bool SysSD::createLog_Nodes(){
 	bool cree = false;
-	File nodes = (*this).open("nodes.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	nodes.close();
+	File nodes = SD.open("nodes.txt", FILE_WRITE);
+	if(nodes) {
+		bool cree = true;
+		nodes.close();
+	}
 	return cree;
 }
 
@@ -76,9 +78,11 @@ bool SysSD::createLog_Nodes(){
 */
 bool SysSD::createLog_Users(){
 	bool cree = false;
-	File users = (*this).open("users.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	users.close();
+	File users = SD.open("users.txt", FILE_WRITE);
+	if(users) {
+	  bool cree = true;
+	  users.close();
+	}
 	return cree;
 }
 
@@ -89,9 +93,11 @@ bool SysSD::createLog_Users(){
 */
 bool SysSD::createLog_Admins(){
 	bool cree = false;
-	File admins = (*this).open("admins.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	admins.close();
+	File admins = SD.open("admins.txt", FILE_WRITE);
+	if(admins) {
+	  bool cree = true;
+	  admins.close();
+	}
 	return cree;
 }
 
@@ -102,9 +108,11 @@ bool SysSD::createLog_Admins(){
 */
 bool SysSD::createLog_Settings(){
 	bool cree = false;
-	File settings = (*this).open("settings.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	settings.close();
+	File settings = SD.open("settings.txt", FILE_WRITE);
+	if(settings) {
+	  bool cree = true;
+	  settings.close();
+	}
 	return cree;
 }
 
@@ -115,9 +123,11 @@ bool SysSD::createLog_Settings(){
 */
 bool SysSD::createLog_Actions(){
 	bool cree = false;
-	File actions = (*this).open("actions.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	actions.close();
+	File actions = SD.open("actions.txt", FILE_WRITE);
+	if(actions) {
+	  bool cree = true;
+	  actions.close();
+	}
 	return cree;
 }
 
@@ -128,9 +138,11 @@ bool SysSD::createLog_Actions(){
 */
 bool SysSD::createLog_Errors(){
 	bool cree = false;
-	File errors = (*this).open("errors.txt", FILE_WRITE);
-	if(nodes) bool cree = true;
-	errors.close();
+	File errors = SD.open("errors.txt", FILE_WRITE);
+	if(errors) {
+	  bool cree = true;
+	  errors.close();
+	}
 	return cree;
 }
 
@@ -167,6 +179,7 @@ bool SysSD::addPeople(String nom, String prenom, String cardID){
 	users.close();
 }
 
+
 /**
 * Cherche l'utilisateur correspondant à cardID, et change son Nom et son Prénom
 *
@@ -175,48 +188,48 @@ bool SysSD::addPeople(String nom, String prenom, String cardID){
 bool SysSD::editPeople(String nom, String prenom, String cardID){
 	uint8_t line;
 	bool found = this->findUserCardID(cardID, &line);
- 	if (found){
-    	String currentUser[3];
-    	this->findUserCardID(cardID, &line, currentUser);
-    	this->removePeople(currentUser[0], currentUser[0], currentUser[0]);
-    	this->addPeople(nom, prenom, cardID);
+  if (found){
+    String currentUser[3];
+    this->findUserCardID(cardID, &line, currentUser);
+    this->removePeople(currentUser[0], currentUser[0], currentUser[0]);
+    this->addPeople(nom, prenom, cardID);
 	}
- 	return found;
+ return found;
 }
 
 bool SysSD::removePeople(String nom, String prenom, String cardID){
 	uint8_t line;
- 	bool found = this->findUserCardID(cardID, &line);
-	if (found){
-    	File users = SD.open("users.txt", FILE_WRITE);
- 	}
+  bool found = this->findUserCardID(cardID, &line);
+  if (found){
+    File users = SD.open("users.txt", FILE_WRITE);
+  }
 	return false;
 }
 
-bool SysSD::addNode(String titre, uint8_t nodesID, String type, uint8_t settings[], uint8_t settingsSize){
+bool SysSD::addNode(String titre, uint8_t nodesID, String type, uint8_t settings[]){
 	File nodes = SD.open("nodes.txt", FILE_WRITE);
 	if(nodes){
 		String door = ""; //+ titre + " " + nodesID + " " + type + " " + settings;
 		nodes.println(door);
-    	nodes.close();
+    nodes.close();
 	} else {
 		this->addError(Error::cannotOpen("nodes.txt"));
 	}
 }
 
-bool SysSD::editNode(String titre, uint8_t nodesID, String type, uint8_t* settings){
+bool SysSD::editNode(String titre, uint8_t nodesID, String type, uint8_t settings[]){
 	return false;
 }
 
-bool SysSD::removeNode(String titre, uint8_t nodesID, String type, uint8_t* settings){
+bool SysSD::removeNode(String titre, uint8_t nodesID, String type, uint8_t settings[]){
 	return false;
 }
 
-bool SysSd::editSetting(){
+bool SysSD::editSetting(){
 	return false;
 }
 
-String SysSd::readSettings(){
+String SysSD::readSettings(){
 	return "no";
 }
 
@@ -241,6 +254,30 @@ bool SysSD::addWarning(String warning){
 	}
 	return result;
 }
+
+
+/*
+* Vérifie si un utilisateur existe en se basant sur son CardID
+*
+*	A VALIDER/TESTER
+*/
+bool SysSD::findUserCardID(String cardID){
+	bool found = false;
+	String l_line = "";
+	File users = SD.open("users.txt", FILE_READ);
+	uint8_t nbLine = 0;
+	while (users.available() != 0) {
+		l_line = users.readStringUntil('\n');
+		l_line = l_line.substring(l_line.length(), 3);
+		if (l_line == cardID) {
+			found = true;
+			break;
+		}
+	}
+	users.close();
+	return found;
+}
+
 
 /*
 * Vérifie si un utilisateur existe en se basant sur son CardID et donne la ligne correspondante
@@ -273,7 +310,7 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line){
 *
 *	A COMPLETER VALIDER/TESTER
 */
-bool SysSD::findUserCardID(String cardID, uint8_t* line, String userStr[]){
+/*bool SysSD::findUserCardID(String cardID, uint8_t* line, String userStr[]){
 	bool found = false;
 	String l_line = ""; String readCardID;
 	File users = SD.open("users.txt", FILE_READ);
@@ -288,11 +325,11 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line, String userStr[]){
   			*line = nbLine;
   			break;
       }
+        if(c != " "){
       char c=""; String aWord;
       String[3] userTab; uint8_t userInd = 0;
       for (i=0; i<line.length(); i++){
         c = line[i];
-        if(c != " "){
           aWord += c;
         } else {
           userTab[userInd] = aWord;
@@ -306,7 +343,7 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line, String userStr[]){
   	users.close();
   }
 	return found;
-}
+}*/
 
 String SysSD::glandouillHeure(){
 	String s = "00/00/2666 - 00:00:00";

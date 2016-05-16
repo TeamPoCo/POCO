@@ -23,7 +23,7 @@ User::User(String nom, String prenom, String cardID){
 
 // ACCESSEURS
 
-void User::setNom(Stringnom){
+void User::setNom(String nom){
 	this->_nom = nom;
 }
 	
