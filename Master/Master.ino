@@ -20,25 +20,19 @@ RF24 radio(7,8);
 RF24Network network(radio);
 RF24Mesh mesh(radio,network);
 
-struct payload_t {
-  unsigned int type;
-  unsigned int query;
-};
-
 uint32_t ctr=0;
 
 uint8_t nodesID[253] = {0};
 
-boolean ouvrir = true;
-
 void setup() {
   Serial.begin(115200);
- 
+  Serial.println("Démarrage d'un module Maitre");
+  
   // Set the nodeID to 0 for the master node
   mesh.setNodeID(0);
   // Connect to the mesh
-  mesh.begin();
- 
+  mesh.begin(108, RF24_250KBPS);
+  Serial.println("Ready !");
 }
  
 uint32_t displayTimer = 0;
@@ -121,25 +115,6 @@ void loop() {
       Serial.println(header.type);
       break;
     }
-  }
- 
- 
-  // Send each node a message every five seconds
-  // Send a different message to node 1, containing another counter instead of millis()
-  if(millis() - displayTimer > 2000){
-    //ctr++;
-    /*for (int i = 0; i < mesh.addrListTop; i++) {
-      payload_t payload = {millis(),ctr};
-      RF24NetworkHeader header(mesh.addrList[i].address, OCT); //Constructing a header
-      Serial.println( (network.write(header, &payload, sizeof(payload)) == 1 ? "Send OK" : "Send Fail")); //Sending an message
-      
-    }*/
-    if (ouvrir) {
-      ouvrir = false;
-    }else{
-      ouvrir = true;}
-    mesh.write(&ouvrir, 'O', sizeof(ouvrir), 1);
-    displayTimer = millis();
   }
 }
 

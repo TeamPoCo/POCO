@@ -14,7 +14,9 @@
 #include <SPI.h>
 #include <EEPROM.h>
 #include "SoftReset.h"
-//#include <printf.h>
+#include <Wire.h>
+#include <PN532_I2C.h>
+#include "PN532.h"
 
 
 /**** Configure the nrf24l01 CE and CS pins ****/
@@ -32,87 +34,58 @@ RF24Mesh mesh(radio, network);
  *
  **/
 
+PN532_I2C pn532i2c(Wire);
+PN532 nfc(pn532i2c);
 
+#define LED_VERTE 4
+#define LED_ROUGE 5
+
+uint8_t validKeys[][7] = {
+                          {0x04, 0x42, 0x16, 0x32, 0x99, 0x3B, 0x80},
+                          {0x04, 0x8C, 0xBE, 0xD1, 0x8A, 0x02, 0x80},
+                          {0x04, 0x1C, 0x4A, 0x32, 0x99, 0x3B, 0x80}
+                         };
+
+int keyCount = sizeof validKeys / 7;
+uint8_t success;
+uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };  // Buffer to store the returned UID
+uint8_t uidLength;// Length of the UID (4 or 7 bytes depending on ISO14443A card type)
 uint32_t displayTimer = 0;
-
-struct payload_t {
-  unsigned long ms;
-  unsigned long counter;
-};
-
-uint8_t register();
-
+uint32_t ledTimer = 0;
+uint32_t delayLedTimer = 0;
+boolean action = false;
+boolean valid = false;
+boolean redLedState = HIGH;
 
 void setup() {
   Serial.begin(115200);
-  mesh.setNodeID(register());
-  // Connect to the mesh
+  Serial.println("Démarrage d'un module NFC");
+  
+  pinMode(LED_VERTE, OUTPUT);
+  pinMode(LED_ROUGE, OUTPUT);
+  
+  digitalWrite(LED_VERTE, LOW);
+  digitalWrite(LED_ROUGE, HIGH);
+  
+  //Connect to the mesh
+  mesh.setNodeID(register_board());
   Serial.print(F("NodeID = "));
   Serial.println(mesh.getNodeID());
   Serial.println(F("Connecting to the mesh..."));
-  mesh.begin();
-  Serial.print(F("NodeID = "));
-  Serial.println(mesh.getNodeID());
+  mesh.begin(108, RF24_250KBPS);
+  
+  nfc.begin();
+  nfc.SAMConfig();
+  Serial.println("Ready !");
 }
 
 void loop() {
 
+  checkTag();
+  
   mesh.update();
+  meshReceive();
+  meshPing();
 
-  // Send to the master node every second
-  if (millis() - displayTimer >= 1000) {
-    displayTimer = millis();
-
-    // Send an 'M' type message containing the current millis()
-    if (!mesh.write(&displayTimer, 'M', sizeof(displayTimer))) {
-
-      // If a write fails, check connectivity to the mesh network
-      if ( ! mesh.checkConnection() ) {
-        //refresh the network address
-        Serial.println("Renewing Address");
-        mesh.renewAddress();
-      } else {
-        Serial.println("Send fail, Test OK");
-      }
-    } else {
-      Serial.print("Send OK: "); Serial.println(displayTimer);
-    }
-  }
+  redBlink();  
 }
-
-uint8_t register(){
-  if(EEPROM.read(100) > 0 &&  EEPROM.read(100) < 255){
-    Serial.print(F("read eeprom 100 : "));
-    Serial.println(int(EEPROM.read(100)));
-    return EEPROM.read(100);
-  }
-  else {
-    mesh.setNodeID(255);
-    Serial.println(F("ID 255"));
-    delay(50);
-    Serial.println(F("Connecting to the mesh..."));
-    mesh.begin();
-    boolean active = true;
-    mesh.write(&displayTimer, 'N', sizeof(displayTimer));
-    uint8_t myID = 255;
-    while(active){
-      mesh.update();
-      while (network.available()) {
-        RF24NetworkHeader header;
-        payload_t payload;
-        network.read(header, &myID, sizeof(myID));
-        Serial.print("New ID : ");
-        Serial.println(myID);
-        active = false;
-      }
-    }
-    delay(500);
-    EEPROM.write(100,myID);
-    Serial.print(F("Let's reset"));
-    soft_restart();
-  }
-}
-
-
-
-
