@@ -189,21 +189,82 @@ bool SysSD::editPeople(String nom, String prenom, String cardID){
 	uint8_t line;
 	bool found = this->findUserCardID(cardID, &line);
   if (found){
+    found = this->findUserCardID(nom, prenom, &line); // Verification que l'ID correspond bien à la personne qu'on cherche.
+  }
+  if (found){
     String currentUser[3];
-    this->findUserCardID(cardID, &line, currentUser);
     this->removePeople(currentUser[0], currentUser[0], currentUser[0]);
     this->addPeople(nom, prenom, cardID);
 	}
  return found;
 }
 
+/**
+ * Efface l'utilisateur donné
+ * 
+ */
 bool SysSD::removePeople(String nom, String prenom, String cardID){
-	uint8_t line;
-  bool found = this->findUserCardID(cardID, &line);
+	uint8_t nLigne;
+  bool found = this->findUserCardID(cardID, &nLigne);
+  bool efface = false;
   if (found){
-    File users = SD.open("users.txt", FILE_WRITE);
+    efface = this->effacerLigne("/", "users.txt", nLigne);
   }
-	return false;
+	return efface;
+}
+
+/**
+ * Parcourt les dossiers afin de supprimer les autorisations residuelles
+ * 
+ * @return /!\ true /!\
+ * 
+ * A VALIDER
+ */
+bool SysSD::cleanCardID(String cardID){
+  File root = SD.open("/");
+  String path;
+  while (true) {
+    path = "/";
+    File entry =  root.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    if (entry.isDirectory()) {
+      path += entry.name(); path += "/";
+      if(SD.exists(path+cardID)){
+        SD.remove(path+cardID);
+      }
+    }
+    entry.close();
+  }
+  
+  return true;
+}
+
+/**
+ * Parcourt les dossiers afin d'adapter les autorisations residuelles
+ */ 
+bool SysSD::cleanCardID(String oldCardID, String newCardID){
+  File root = SD.open("/");
+  String path;
+  while (true) {
+    path = "/";
+    File entry =  root.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+    if (entry.isDirectory()) {
+      path += entry.name(); path += "/";
+      if(SD.exists(path+oldCardID)){
+        this->renommer(path, oldCardID, path, newCardID);
+      }
+    }
+    entry.close();
+  }
+  
+  return true;
 }
 
 bool SysSD::addNode(String titre, uint8_t nodesID, String type, uint8_t settings[]){
@@ -233,6 +294,9 @@ String SysSD::readSettings(){
 	return "no";
 }
 
+/**
+ * Ajoute un message d'erreur au log "warning.txt"
+ */
 bool SysSD::addError(String error){
 	bool result = true;
 	File errors = SD.open("errors.txt", FILE_WRITE);
@@ -244,6 +308,9 @@ bool SysSD::addError(String error){
 	return result;
 }
 
+/**
+ * Ajoute un message warning au log "warning.txt"
+ */
 bool SysSD::addWarning(String warning){
 	bool result = true;
 	File errors = SD.open("errors.txt", FILE_WRITE);
@@ -281,7 +348,11 @@ bool SysSD::findUserCardID(String cardID){
 
 /*
 * Vérifie si un utilisateur existe en se basant sur son CardID et donne la ligne correspondante
-*
+* 
+* @param cardID   La chaine de caracteres contenant l'ID à trouver
+* @param *line    Pointeur -> le numéro de la ligne définissant l'utilisateur
+* @return         Si l'utilisateur a été trouvé
+* 
 *	A VALIDER/TESTER
 */
 bool SysSD::findUserCardID(String cardID, uint8_t* line){
@@ -303,48 +374,160 @@ bool SysSD::findUserCardID(String cardID, uint8_t* line){
 	return found;
 }
 
-
 /*
 * Vérifie si un utilisateur existe en se basant sur son CardID et donne la ligne correspondante
-* et renvoie une instance User correspondante
-*
-*	A COMPLETER VALIDER/TESTER
+* 
+* @param nom      La chaine de caracteres contenant le nom à trouver
+* @param prenom   La chaine de caracteres contenant le prenom à touver
+* @param *line    Pointeur -> le numéro de la ligne définissant l'utilisateur
+* @return         Si l'utilisateur a été trouvé
+* 
+*  A VALIDER/TESTER
 */
-/*bool SysSD::findUserCardID(String cardID, uint8_t* line, String userStr[]){
-	bool found = false;
-	String l_line = ""; String readCardID;
-	File users = SD.open("users.txt", FILE_READ);
-	uint8_t nbLine = 0;
-  if(users){
-  	while (users.available() != 0) {
-  		nbLine++;
-  		l_line = users.readStringUntil('\n');
-  		readCardID = l_line.substring(l_line.length(), 3);
-  		if (l_line == cardID) {
-  			found = true;
-  			*line = nbLine;
-  			break;
-      }
-        if(c != " "){
-      char c=""; String aWord;
-      String[3] userTab; uint8_t userInd = 0;
-      for (i=0; i<line.length(); i++){
-        c = line[i];
-          aWord += c;
-        } else {
-          userTab[userInd] = aWord;
-          userInd++;
-          aWord = "";
-        }
-      }
-  	} else {
-  	  this->addError(Error::cannotOpen("user.txt"));
-  	}
-  	users.close();
+bool SysSD::findUserCardID(String nom, String prenom, uint8_t* line){
+  bool found = false;
+  String l_line = "";
+  File users = SD.open("users.txt", FILE_READ);
+  uint8_t nbLine = 0;
+  while (users.available() != 0) {
+    nbLine++;
+    l_line = users.readStringUntil('\n');
+    l_line = l_line.substring(l_line.length(), 3);
+    if (l_line == (""+nom + prenom)) {
+      found = true;
+      *line = nbLine;
+      break;
+    }
   }
-	return found;
-}*/
+  users.close();
+  return found;
+}
 
+/**
+ * Efface une ligne d'un fichier.
+ * 
+ * @param chemin        Le chemin du fichier
+ * @param nomFichier    Le nom du fichier à modifier
+ * @param numeroLigne   La ligne à effacer.
+ * @return              La ligne a été effacée et le fichier temporaire a ete supprime
+ */
+
+boolean SysSD::effacerLigne(String chemin, String nomFichier, uint8_t numeroLigne){
+  boolean ligneParcourue = false;
+  boolean bufSuppr = false;
+  File fichier = SD.open(chemin + nomFichier, FILE_READ);
+  if(SD.exists(chemin + "buffer.txt")){
+    SD.remove(chemin + "buffer.txt"); 
+  }
+  File buf = SD.open(chemin + "buffer.txt", FILE_WRITE);
+  String ligne = ""; uint8_t numLigne = 0; uint8_t i;
+  while(fichier.available()){             // Lecture du fichier ligne par ligne
+    ligne += fichier.readStringUntil('\n');
+    if (numLigne != numeroLigne-1){           
+      buf.println(""+ligne);
+    } else {
+      ligneParcourue = true;
+    }
+    ligne = "";                           // Réinitialisation de la chaîne de caractère "ligne"
+    numLigne++;
+  }
+  fichier.close(); buf.close();           // Fermeture du fichier
+  SD.remove(chemin + nomFichier);
+  renommer(chemin, "buffer.txt", chemin,  nomFichier);
+  /*if (SD.exists(chemin + "buffer.txt")) { // Suppressin du fichier "buffer.txt" si restant
+    SD.remove(chemin + "buffer.txt"); 
+  }*/
+  bufSuppr = !SD.exists(chemin + "buffer.txt");
+  
+  return (ligneParcourue && bufSuppr);
+}
+
+
+/**
+ * Créée une copie du fichier d'entree, la ligne indiquée étant supprimee.
+ * 
+ * @param cheminIN        Le chemin du fichier
+ * @param nomFichierIN    Le nom du fichier à modifier
+ * @param cheminOUT       Le chemin du fichier
+ * @param nomFichierOUT   Le nom du fichier à modifier
+ * @param numeroLigne     La ligne à effacer.
+ * @param suppr           Si le fichier de sortie existe deja, donne l'autorisation ou non d'écraser le fichier de sortie existant
+ * @return                Si une erreur s'est produite.
+ */
+boolean SysSD::effacerLigneVers(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT, uint8_t numeroLigne, boolean suppr){
+  boolean ligneParcourue = false;
+  boolean ok = true;
+  File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
+  if(SD.exists(cheminOUT)){
+    if(SD.exists(cheminOUT + nomFichierOUT)){
+      if (suppr){                             // Autorisation d'ecrasement accordee.
+        SD.remove(cheminOUT + nomFichierOUT); 
+      } else {                                // Autorisation d'ecrasement non accordee.
+        ok = false; // Le fichier de sortie existe deja, et il n'est pasautorise de le supprimer.
+      }
+    }
+  } else {
+    ok = false; // Le chemin specifie n'existe pas.
+  }
+  if (ok){  // Si toutes les conditions nécessaires sont valides, on procède alors.
+    File fOut = SD.open(cheminOUT + nomFichierOUT, FILE_WRITE);
+    String ligne = ""; uint8_t numLigne = 0; uint8_t i;
+    while(fIn.available()){             // Lecture du fichier ligne par ligne
+      ligne += fIn.readStringUntil('\n');
+      if (numLigne != numeroLigne-1){          
+        fOut.println(""+ligne);
+      } else {
+        ligneParcourue = true;
+      }
+      ligne = "";                           // Réinitialisation de la chaîne de caractère "ligne"
+      numLigne++;
+    }
+    fIn.close(); fOut.close();           // Fermeture des fichiers
+  }
+  return (ok && ligneParcourue) ;
+}
+
+/**
+ * Créée une copie du fichier d'entree, la ligne indiquée étant supprimee.
+ * 
+ * @param cheminIN        Le chemin du fichier
+ * @param nomFichierIN    Le nom du fichier à renommer
+ * @param cheminOUT       Le chemin du fichier
+ * @param nomFichierOUT   Le nom du fichier après renomage
+ * @return                Si le renommage a bien fonctionné
+ */
+boolean SysSD::renommer(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT){
+  boolean ok = true;
+  File fIn = SD.open(cheminIN + nomFichierIN, FILE_READ);
+  if(SD.exists(cheminOUT)){
+    if((cheminIN + nomFichierIN) == (cheminOUT + nomFichierOUT)){
+       ok = false; // Le fichier de sortie existe deja, et il n'est pas autorise de le supprimer.
+    }
+  } else {
+    ok = false; // Le chemin specifie n'existe pas.
+  }
+  if (ok){  // Si toutes les conditions nécessaires sont valides, on procède alors.
+    File fOut = SD.open(cheminOUT + nomFichierOUT, FILE_WRITE);
+    String ligne = ""; uint8_t numLigne = 0; uint8_t i;
+    while(fIn.available()){             // Lecture du fichier ligne par ligne
+      ligne += fIn.readStringUntil('\n');      
+      fOut.println(""+ligne);
+      ligne = ""; 
+    }
+                // Réinitialisation de la chaîne de caractère "ligne"
+    fOut.close();
+    }
+   fIn.close();            // Fermeture des fichiers
+   if (SD.exists(cheminIN + nomFichierIN)) { // Suppressin du fichier "buffer.txt" si restant
+    SD.remove(cheminIN + nomFichierIN); 
+   }
+  return ok  ;
+}
+
+
+/**
+ * Methode qui renvoie une date... fantasiste
+ */
 String SysSD::glandouillHeure(){
 	String s = "00/00/2666 - 00:00:00";
 	return s;

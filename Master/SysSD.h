@@ -30,6 +30,8 @@ class SysSD {
 	bool addPeople(String nom, String prenom, String cardID);
 	bool editPeople(String nom, String prenom, String cardID);
 	bool removePeople(String nom, String prenom, String cardID);
+  bool cleanCardID(String cardID);
+  bool cleanCardID(String oldCardID, String newCardID);
 	bool addNode(String titre, uint8_t nodeID, String type, uint8_t settings[]);
 	bool editNode(String titre, uint8_t nodeID, String type, uint8_t settings[]);
 	bool removeNode(String titre, uint8_t nodeID, String type, uint8_t settings[]);
@@ -39,7 +41,11 @@ class SysSD {
 	bool addWarning(String warning);
 	bool findUserCardID(String match);
 	bool findUserCardID(String match, uint8_t* line);
+  bool findUserCardID(String nom, String prenom, uint8_t* line);
  	bool findUserCardID(String match, uint8_t* line, String userStr[]);
+  static boolean effacerLigne(String chemin, String nomFichier, uint8_t numeroLigne);
+  static boolean effacerLigneVers(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT, uint8_t numeroLigne, boolean suppr);
+  static boolean renommer(String cheminIN, String nomFichierIN, String cheminOUT, String nomFichierOUT);
 	String glandouillHeure();
 	
 	
